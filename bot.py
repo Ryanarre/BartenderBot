@@ -18,11 +18,18 @@ def main_action(message):
     if message.text == start_text:
         conn = sqlite3.connect('bartender.db')
         cursor = conn.cursor()
-        question = cursor.execute('SELECT * FROM coctails ORDER BY RANDOM() LIMIT 1')
 
+        coctailQuery = cursor.execute('SELECT * FROM coctails ORDER BY RANDOM() LIMIT 1')
         response = cursor.fetchone()
+        coctailId = response[0]
+        coctailName = response[1]
         photo = open('./res/' + response[2] + '.png' , 'rb')
-        '''bot.send_message(message.chat.id, cursor.fetchone()[0])'''
-        bot.send_photo(message.chat.id, photo, response[1])
+
+        ingredientsQuery = cursor.execute('SELECT name, recipes.volume, (recipes.volume / ingredients.volume) * price FROM ingredients, recipes WHERE coctailId = ' + str(coctailId) + ' AND ingredientId = ingredients.id')
+        recipe_text = '\n\n'
+        for row in cursor:
+            recipe_text += row[0] + ' - ' + str(row[1]) + ' ml\n'
+        
+        message = bot.send_photo(message.chat.id, photo, coctailName + recipe_text)
 
 bot.polling();
